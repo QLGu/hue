@@ -358,6 +358,7 @@ ko.bindingHandlers.leafletMapChart = {
       if (element._map != null) {
         element._leaflet = false;
         element._map.remove();
+        $(element).removeClass("leaflet-zoom-box-crosshair");
       }
 
       if (_hasAtLeastOneLat && _hasAtLeastOneLng) {
@@ -369,6 +370,12 @@ ko.bindingHandlers.leafletMapChart = {
               attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(_map);
           }
+
+          var _zoomBox = L.control.zoomBox({
+            modal: true
+          });
+          _map.addControl(_zoomBox);
+
 
           if (_options.showMoveCheckbox) {
             var _command = L.control({
@@ -403,7 +410,13 @@ ko.bindingHandlers.leafletMapChart = {
               }
             });
 
-            _map.on("moveend", function () {
+            _map.on("boxzoomend", function (e) {
+              _onRegionChange(e.boxZoomBounds);
+            });
+            _map.on("dragend", function () {
+              _onRegionChange(_map.getBounds());
+            });
+            _map.on("zoomend", function () {
               _onRegionChange(_map.getBounds());
             });
           }
