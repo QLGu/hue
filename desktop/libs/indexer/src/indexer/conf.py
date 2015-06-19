@@ -48,7 +48,7 @@ def zkensemble():
     if clusters['default'].HOST_PORTS.get() != 'localhost:2181':
       return '%s/solr' % clusters['default'].HOST_PORTS.get()
   except:
-    LOG.exception('failed to get zookeeper ensmble')
+    LOG.exception('failed to get zookeeper ensemble')
 
   try:
     from search.conf import SOLR_URL
@@ -84,7 +84,8 @@ SOLRCTL_PATH = Config(
   type=str,
   dynamic_default=solrctl)
 
-SOLR_ZK_ENSEMBLE  = Config(
+# Deprecated
+SOLR_ZK_ENSEMBLE = Config(
   key="solr_zk_ensemble",
   help=_t("Zookeeper ensemble."),
   type=str,

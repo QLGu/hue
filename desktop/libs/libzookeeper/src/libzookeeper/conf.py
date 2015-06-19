@@ -18,30 +18,39 @@
 from desktop.lib.conf import Config, UnspecifiedConfigSection, ConfigSection
 
 
-def coerce_string(value):
-  if type(value) == list:
-    return ','.join(value)
-  else:
-    return value
+def zkensemble():
+  """
+  Try to guess the value if no values are specified.
+  """
+  try:
+    # Backward compatibility until Hue 4
+    from zookeeper.conf import CLUSTERS
+    clusters = CLUSTERS.get()
+    if clusters['default'].HOST_PORTS.get() != 'localhost:2181':
+      return '%s/solr' % clusters['default'].HOST_PORTS.get()
+  except:
+    LOG.exception('failed to get zookeeper ensemble')
+
+  try:
+    from search.conf import SOLR_URL
+    parsed = urlparse(SOLR_URL.get())
+    return "%s:2181/solr" % (parsed.hostname or 'localhost')
+  except:
+    LOG.exception('failed to get solr url')
+
+  return "localhost:2181"
 
 
-# Used only for ZooKeeper app proeprties, ZooKeeper specific properties should come from libzookeeper
 CLUSTERS = UnspecifiedConfigSection(
   "clusters",
-  help="One entry for each Zookeeper cluster",
+  help="One entry for each ZooKeeper cluster",
   each=ConfigSection(
-    help="Information about a single Zookeeper cluster",
+    help="Information about a single ZooKeeper cluster",
     members=dict(
-      HOST_PORTS=Config(
-          "host_ports",
-          help="Zookeeper ensemble. Comma separated list of Host/Port, e.g. localhost:2181,localhost:2182,localhost:2183",
-          default="localhost:2181",
-          type=coerce_string,
-      ),
-      REST_URL=Config(
-          "rest_url",
-          help="The URL of the REST contrib service.",
-          default="http://localhost:9998",
+      ENSEMBLE=Config(
+          "ensemble",
+          help="ZooKeeper ensemble. Comma separated list of Host/Port, e.g. localhost:2181,localhost:2182,localhost:2183",
+          dynamic_default=zkensemble,
           type=str,
       ),
       PRINCIPAL_NAME=Config(
